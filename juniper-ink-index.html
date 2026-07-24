@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Juniper Ink</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0f;
+    color: #f0f0f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  .screen { display: none; padding-bottom: 90px; min-height: 100vh; }
+  .screen.active { display: block; }
+
+  /* TAB BAR */
+  .tab-bar {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: #0e0e1a;
+    border-top: 1px solid #2a2a3e;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0 12px;
+    z-index: 999;
+  }
+  .tab {
+    background: none;
+    border: none;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 10px;
+    transition: all 0.2s;
+    min-width: 44px;
+  }
+  .tab-icon { font-size: 20px; line-height: 1; }
+  .tab-label { font-size: 9px; letter-spacing: 0.3px; font-weight: 500; }
+  .tab.tabon { color: #6c5ce7; }
+  .tab.tabon .tab-icon { transform: scale(1.15); }
+
+  /* COMMON */
+  .header {
+    background: linear-gradient(180deg, #0e0e1a 0%, #12121f 100%);
+    padding: 52px 20px 20px;
+    border-bottom: 1px solid #1e1e30;
+  }
+  .wordmark {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #fff;
+    text-transform: uppercase;
+  }
+  .wordmark span { color: #6c5ce7; }
+  .sub-header {
+    background: #12121f;
+    padding: 44px 20px 16px;
+    border-bottom: 1px solid #1e1e30;
+  }
+  .screen-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .screen-subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-top: 4px;
+  }
+  .btn-primary {
+    background: #6c5ce7;
+    color: #fff;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:active { opacity: 0.85; }
+  .btn-outline {
+    background: transparent;
+    color: #6c5ce7;
+    border: 1.5px solid #6c5ce7;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .card {
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #6c5ce7;
+    margin-bottom: 12px;
+  }
+  .pad { padding: 20px; }
+  .chip {
+    display: inline-block;
+    background: #1e1840;
+    color: #6c5ce7;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* HOME */
+  .home-hero {
+    background: linear-gradient(135deg, #0e0e1a 0%, #1a1535 50%, #0e0e1a 100%);
+    padding: 52px 20px 30px;
+    position: relative;
+    overflow: hidden;
+  }
+  .home-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(108,92,231,0.25) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .home-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(108,92,231,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .home-wordmark { font-size: 30px; font-weight: 900; letter-spacing: 3px; color: #fff; text-transform: uppercase; position: relative; z-index: 1; }
+  .home-wordmark span { color: #6c5ce7; }
+  .home-tagline { font-size: 13px; color: #9a8fd4; margin-top: 6px; font-style: italic; position: relative; z-index: 1; }
+  .home-actions { display: flex; gap: 12px; margin-top: 24px; position: relative; z-index: 1; }
+  .home-actions .btn-primary { flex: 1; }
+  .home-actions .btn-outline { flex: 1; }
+  .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
+  .quick-card {
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 16px;
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    align-items: flex-start;
+  }
+  .quick-card:active { border-color: #6c5ce7; }
+  .quick-icon { font-size: 26px; }
+  .quick-title { font-size: 13px; font-weight: 700; color: #fff; }
+  .quick-desc { font-size: 11px; color: #666; }
+  .promo-banner {
+    margin: 0 20px 20px;
+    background: linear-gradient(135deg, #1e1840, #2a1f5a);
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid #3d2fa0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+  }
+  .promo-icon { font-size: 32px; }
+  .promo-title { font-size: 15px; font-weight: 700; color: #fff; }
+  .promo-sub { font-size: 12px; color: #9a8fd4; margin-top: 2px; }
+  .notif-banner {
+    margin: 0 20px 20px;
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .notif-dot { width: 10px; height: 10px; background: #6c5ce7; border-radius: 50%; flex-shrink: 0; }
+  .notif-text { font-size: 13px; color: #ccc; }
+  .notif-text strong { color: #fff; }
+
+  /* STAFF */
+  .staff-card {
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    display: flex;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .staff-card:active { border-color: #6c5ce7; }
+  .staff-avatar {
+    width: 70px; height: 70px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .staff-info { flex: 1; }
+  .staff-name { font-size: 16px; font-weight: 700; color: #fff; }
+  .staff-role { font-size: 12px; color: #6c5ce7; font-weight: 600; margin-top: 2px; }
+  .staff-styles { font-size: 12px; color: #888; margin-top: 6px; line-height: 1.5; }
+  .staff-avail { display: inline-block; background: #0d2218; color: #4ade80; font-size: 11px; padding: 3px 10px; border-radius: 20px; margin-top: 8px; }
+  .staff-detail-header {
+    background: linear-gradient(135deg, #0e0e1a, #1a1535);
+    padding: 52px 20px 24px;
+    border-bottom: 1px solid #1e1e30;
+  }
+  .back-btn { background: none; border: none; color: #6c5ce7; font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+  .big-avatar { width: 90px; height: 90px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 42px; margin-bottom: 14px; }
+  .star-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+  .stars { color: #f59e0b; font-size: 14px; }
+
+  /* BOOKING */
+  .booking-step { padding: 20px; }
+  .step-indicator { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+  .step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .step-dot.done { background: #6c5ce7; color: #fff; }
+  .step-dot.active { background: #6c5ce7; color: #fff; }
+  .step-dot.inactive { background: #1e1e30; color: #555; }
+  .step-line { flex: 1; height: 2px; background: #1e1e30; }
+  .step-line.done { background: #6c5ce7; }
+  .field-label { font-size: 12px; font-weight: 600; color: #888; margin-bottom: 8px; letter-spacing: 0.5px; }
+  .field-group { margin-bottom: 18px; }
+  .select-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sel-chip {
+    background: #14141f;
+    border: 1.5px solid #2a2a3e;
+    color: #ccc;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sel-chip.selected { background: #1e1840; border-color: #6c5ce7; color: #6c5ce7; font-weight: 700; }
+  .date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .date-cell {
+    aspect-ratio: 1;
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .date-cell .dc-day { font-size: 9px; color: #555; }
+  .date-cell .dc-num { font-size: 14px; font-weight: 700; color: #ccc; }
+  .date-cell.selected { background: #6c5ce7; border-color: #6c5ce7; }
+  .date-cell.selected .dc-day, .date-cell.selected .dc-num { color: #fff; }
+  .date-cell.unavail { opacity: 0.3; cursor: not-allowed; }
+  .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .time-chip {
+    background: #14141f;
+    border: 1.5px solid #1e1e30;
+    color: #ccc;
+    border-radius: 10px;
+    padding: 12px 8px;
+    font-size: 13px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .time-chip.selected { background: #1e1840; border-color: #6c5ce7; color: #6c5ce7; font-weight: 700; }
+  .time-chip.booked { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+  .confirm-card { background: #14141f; border: 1px solid #1e1e30; border-radius: 16px; padding: 18px; margin-bottom: 20px; }
+  .confirm-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e1e30; }
+  .confirm-row:last-child { border-bottom: none; }
+  .confirm-key { font-size: 13px; color: #888; }
+  .confirm-val { font-size: 13px; color: #fff; font-weight: 600; }
+  .success-screen { padding: 60px 30px; text-align: center; }
+  .success-icon { font-size: 64px; margin-bottom: 20px; }
+  .success-title { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+  .success-sub { font-size: 14px; color: #888; line-height: 1.6; }
+
+  /* GALLERY */
+  .gallery-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; }
+  .gallery-cell {
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.2s;
+  }
+  .gallery-cell:active { opacity: 0.8; }
+  .gallery-filter { display: flex; gap: 8px; padding: 16px 20px; overflow-x: auto; scrollbar-width: none; }
+  .gallery-filter::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    background: #14141f;
+    border: 1.5px solid #1e1e30;
+    color: #888;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .filter-chip.active { background: #1e1840; border-color: #6c5ce7; color: #6c5ce7; }
+
+  /* SERVICES */
+  .service-item {
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .service-item:active { border-color: #6c5ce7; }
+  .service-icon { font-size: 28px; width: 48px; height: 48px; background: #1a1530; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .service-info { flex: 1; }
+  .service-name { font-size: 15px; font-weight: 700; color: #fff; }
+  .service-desc { font-size: 12px; color: #888; margin-top: 3px; }
+  .service-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .service-price { font-size: 16px; font-weight: 800; color: #6c5ce7; }
+  .service-time { font-size: 11px; color: #666; background: #1a1a28; padding: 3px 8px; border-radius: 8px; }
+
+  /* REVIEWS */
+  .review-summary {
+    background: linear-gradient(135deg, #1e1840, #12121f);
+    margin: 20px;
+    border-radius: 20px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid #2a1f5a;
+  }
+  .big-rating { font-size: 52px; font-weight: 900; color: #fff; line-height: 1; }
+  .big-stars { font-size: 24px; color: #f59e0b; margin: 8px 0; letter-spacing: 4px; }
+  .rating-count { font-size: 13px; color: #888; }
+  .rating-bar-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+  .rb-label { font-size: 12px; color: #888; width: 12px; }
+  .rb-track { flex: 1; height: 6px; background: #1e1e30; border-radius: 3px; overflow: hidden; }
+  .rb-fill { height: 100%; background: #6c5ce7; border-radius: 3px; }
+  .rb-pct { font-size: 11px; color: #666; width: 28px; text-align: right; }
+  .review-card {
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+  .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .reviewer-avatar { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: #1e1840; }
+  .reviewer-name { font-size: 14px; font-weight: 700; color: #fff; }
+  .reviewer-date { font-size: 11px; color: #666; }
+  .review-stars { color: #f59e0b; font-size: 13px; }
+  .review-text { font-size: 13px; color: #aaa; line-height: 1.6; }
+  .review-style { font-size: 11px; color: #6c5ce7; margin-top: 8px; font-weight: 600; }
+
+  /* REMINDERS */
+  .reminder-card {
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .reminder-icon { font-size: 26px; flex-shrink: 0; }
+  .reminder-title { font-size: 15px; font-weight: 700; color: #fff; }
+  .reminder-sub { font-size: 12px; color: #888; margin-top: 4px; line-height: 1.5; }
+  .reminder-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; margin-top: 8px; font-weight: 600; }
+  .badge-green { background: #0d2218; color: #4ade80; }
+  .badge-yellow { background: #1f1800; color: #fbbf24; }
+  .badge-purple { background: #1e1840; color: #6c5ce7; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #1e1e30; }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 14px; color: #ccc; }
+  .toggle-sub { font-size: 11px; color: #666; margin-top: 2px; }
+  .toggle {
+    width: 44px; height: 24px;
+    background: #6c5ce7;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    top: 3px; left: 23px;
+    transition: left 0.2s;
+  }
+  .toggle.off { background: #2a2a3e; }
+  .toggle.off::after { left: 3px; }
+
+  /* LOYALTY */
+  .loyalty-card {
+    background: linear-gradient(135deg, #1e1840 0%, #2d1f5a 50%, #1a1535 100%);
+    margin: 20px;
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid #3d2fa0;
+    position: relative;
+    overflow: hidden;
+  }
+  .loyalty-card::before {
+    content: '★';
+    position: absolute;
+    top: -20px; right: -10px;
+    font-size: 120px;
+    color: rgba(108,92,231,0.1);
+  }
+  .loyalty-name { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #9a8fd4; text-transform: uppercase; }
+  .loyalty-holder { font-size: 20px; font-weight: 800; color: #fff; margin-top: 6px; }
+  .loyalty-tier { font-size: 12px; color: #6c5ce7; font-weight: 600; margin-top: 4px; }
+  .punch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0 16px; }
+  .punch {
+    aspect-ratio: 1;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    position: relative;
+  }
+  .punch.stamped { background: rgba(108,92,231,0.3); border-color: #6c5ce7; }
+  .punch.stamped::after { content: '✦'; position: absolute; color: #6c5ce7; font-size: 22px; }
+  .loyalty-points { display: flex; justify-content: space-between; margin-top: 8px; }
+  .lp-item { text-align: center; }
+  .lp-val { font-size: 22px; font-weight: 900; color: #fff; }
+  .lp-key { font-size: 10px; color: #9a8fd4; text-transform: uppercase; letter-spacing: 0.5px; }
+  .reward-item {
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+  }
+  .reward-icon { font-size: 28px; }
+  .reward-info { flex: 1; }
+  .reward-name { font-size: 14px; font-weight: 700; color: #fff; }
+  .reward-req { font-size: 12px; color: #888; margin-top: 3px; }
+  .reward-unlock { font-size: 12px; font-weight: 700; }
+
+  /* MAP */
+  .map-placeholder {
+    height: 220px;
+    background: linear-gradient(135deg, #0e0e1a, #1a1535);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    border-bottom: 1px solid #1e1e30;
+    overflow: hidden;
+  }
+  .map-grid {
+    position: absolute; inset: 0;
+    background-image: 
+      linear-gradient(rgba(108,92,231,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,92,231,0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .map-pin { font-size: 52px; position: relative; z-index: 1; filter: drop-shadow(0 0 20px rgba(108,92,231,0.8)); }
+  .map-pulse {
+    position: absolute;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 2px solid rgba(108,92,231,0.4);
+    animation: pulse 2s infinite;
+    z-index: 0;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+  .info-row {
+    background: #14141f;
+    border: 1px solid #1e1e30;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .info-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .info-label { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .info-val { font-size: 14px; color: #fff; margin-top: 2px; line-height: 1.5; }
+
+</style>
+</head>
+<body>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab tabon" id="tab-home" onclick="showScreen('screen-home')">
+    <span class="tab-icon">🏠</span><span class="tab-label">Home</span>
+  </button>
+  <button class="tab" id="tab-staff" onclick="showScreen('screen-staff')">
+    <span class="tab-icon">🎨</span><span class="tab-label">Artists</span>
+  </button>
+  <button class="tab" id="tab-book" onclick="showScreen('screen-book')">
+    <span class="tab-icon">📅</span><span class="tab-label">Book</span>
+  </button>
+  <button class="tab" id="tab-gallery" onclick="showScreen('screen-gallery')">
+    <span class="tab-icon">📷</span><span class="tab-label">Gallery</span>
+  </button>
+  <button class="tab" id="tab-more" onclick="showScreen('screen-more')">
+    <span class="tab-icon">⋯</span><span class="tab-label">More</span>
+  </button>
+</div>
+
+<!-- ======================== HOME ======================== -->
+<div class="screen active" id="screen-home">
+  <div class="home-hero">
+    <div class="home-wordmark">Juniper <span>Ink</span></div>
+    <div class="home-tagline">Juniper Tattoo Company · Est. 2018</div>
+    <div class="home-actions">
+      <button class="btn-primary" onclick="showScreen('screen-book')">Book Now</button>
+      <button class="btn-outline" onclick="showScreen('screen-gallery')">View Work</button>
+    </div>
+  </div>
+
+  <div class="notif-banner">
+    <div class="notif-dot"></div>
+    <div class="notif-text"><strong>Reminder:</strong> Your appointment with Mara is in 2 days — Thu Jul 17 at 2:00 PM</div>
+  </div>
+
+  <div style="padding: 0 20px 4px;">
+    <div class="section-label">Quick Access</div>
+  </div>
+  <div class="quick-grid">
+    <div class="quick-card" onclick="showScreen('screen-staff')">
+      <div class="quick-icon">🎨</div>
+      <div class="quick-title">Our Artists</div>
+      <div class="quick-desc">Meet the team</div>
+    </div>
+    <div class="quick-card" onclick="showScreen('screen-services')">
+      <div class="quick-icon">🛠️</div>
+      <div class="quick-title">Services</div>
+      <div class="quick-desc">Pricing & styles</div>
+    </div>
+    <div class="quick-card" onclick="showScreen('screen-reviews')">
+      <div class="quick-icon">⭐</div>
+      <div class="quick-title">Reviews</div>
+      <div class="quick-desc">4.9 from 312 clients</div>
+    </div>
+    <div class="quick-card" onclick="showScreen('screen-loyalty')">
+      <div class="quick-icon">🎁</div>
+      <div class="quick-title">Loyalty</div>
+      <div class="quick-desc">7 / 10 punches</div>
+    </div>
+  </div>
+
+  <div class="promo-banner" onclick="showScreen('screen-loyalty')">
+    <div class="promo-icon">✦</div>
+    <div>
+      <div class="promo-title">3 Punches Away from a Free Touch-Up</div>
+      <div class="promo-sub">Tap to view your loyalty card →</div>
+    </div>
+  </div>
+
+  <div style="padding: 0 20px 4px;">
+    <div class="section-label">Featured Artists</div>
+  </div>
+  <div style="padding: 0 20px 20px; display: flex; flex-direction: column; gap: 10px;">
+    <div class="card" style="display:flex;gap:14px;padding:16px;cursor:pointer;" onclick="showScreen('screen-artist-mara')">
+      <div class="staff-avatar" style="background:#1a1535;">🦋</div>
+      <div>
+        <div class="staff-name">Mara Cole</div>
+        <div class="staff-role">Fine Line & Botanical</div>
+        <div class="staff-styles">Intricate linework · Watercolor · Nature</div>
+        <div class="staff-avail">● Booking July</div>
+      </div>
+    </div>
+    <div class="card" style="display:flex;gap:14px;padding:16px;cursor:pointer;" onclick="showScreen('screen-artist-leon')">
+      <div class="staff-avatar" style="background:#1a1520;">🐉</div>
+      <div>
+        <div class="staff-name">Leon Voss</div>
+        <div class="staff-role">Neo-Traditional & Dark Art</div>
+        <div class="staff-styles">Bold color · Illustration · Surrealism</div>
+        <div class="staff-avail">● Booking August</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 0 20px 20px;">
+    <button class="btn-outline" style="width:100%;" onclick="showScreen('screen-map')">📍 Find Us on the Map</button>
+  </div>
+</div>
+
+<!-- ======================== STAFF LIST ======================== -->
+<div class="screen" id="screen-staff">
+  <div class="sub-header">
+    <div class="screen-title">Our Artists</div>
+    <div class="screen-subtitle">Talented creatives, unique styles</div>
+  </div>
+  <div style="padding: 20px;">
+    <div class="section-label">Studio Team</div>
+
+    <div class="staff-card" onclick="showScreen('screen-artist-mara')">
+      <div class="staff-avatar" style="background:#1a1535; border-radius:14px;">🦋</div>
+      <div class="staff-info">
+        <div class="staff-name">Mara Cole</div>
+        <div class="staff-role">Fine Line & Botanical</div>
+        <div class="staff-styles">Intricate linework · Watercolor · Nature motifs</div>
+        <div class="staff-avail">● Booking July 2025</div>
+      </div>
+    </div>
+
+    <div class="staff-card" onclick="showScreen('screen-artist-leon')">
+      <div class="staff-avatar" style="background:#1a1520; border-radius:14px;">🐉</div>
+      <div class="staff-info">
+        <div class="staff-name">Leon Voss</div>
+        <div class="staff-role">Neo-Traditional & Dark Art</div>
+        <div class="staff-styles">Bold color · Illustration · Surrealism</div>
+        <div class="staff-avail">● Booking August 2025</div>
+      </div>
+    </div>
+
+    <div class="staff-card" onclick="showScreen('screen-artist-suki')">
+      <div class="staff-avatar" style="background:#1a1520; border-radius:14px;">🌸</div>
+      <div class="staff-info">
+        <div class="staff-name">Suki Park</div>
+        <div class="staff-role">Japanese & Geometric</div>
+        <div class="staff-styles">Irezumi · Mandalas · Black & Grey</div>
+        <div class="staff-avail">● Booking July 2025</div>
+      </div>
+    </div>
+
+    <div class="staff-card" onclick="showScreen('screen-artist-rio')">
+      <div class="staff-avatar" style="background:#1a1325; border-radius:14px;">⚡</div>
+      <div class="staff-info">
+        <div class="staff-name">Rio Santos</div>
+        <div class="staff-role">Blackwork & Dotwork</div>
+        <div class="staff-styles">Geometric · Tribal · Abstract</div>
+        <div class="staff-avail">● Booking Sept 2025</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book with an Artist</button>
+  </div>
+</div>
+
+<!-- ======================== ARTIST: MARA ======================== -->
+<div class="screen" id="screen-artist-mara">
+  <div class="staff-detail-header">
+    <button class="back-btn" onclick="showScreen('screen-staff')">← Back to Artists</button>
+    <div class="big-avatar" style="background:#1a1535;">🦋</div>
+    <div class="staff-name" style="font-size:22px;">Mara Cole</div>
+    <div class="staff-role">Fine Line & Botanical Specialist</div>
+    <div class="star-row">
+      <span class="stars">★★★★★</span>
+      <span style="font-size:13px;color:#888;">5.0 · 94 reviews</span>
+    </div>
+  </div>
+  <div style="padding:20px;">
+    <div class="section-label">About</div>
+    <div style="font-size:14px;color:#aaa;line-height:1.7;margin-bottom:20px;">
+      Mara has been crafting delicate, story-driven tattoos for over 8 years. Specializing in botanical illustration and ultra-fine linework, her work captures the natural world in breathtaking detail. Featured in Tattoo Magazine & Inked Quarterly.
+    </div>
+    <div class="section-label">Specialties</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+      <span class="chip">Fine Line</span><span class="chip">Botanical</span><span class="chip">Watercolor</span><span class="chip">Portraits</span><span class="chip">Geometric</span>
+    </div>
+    <div class="section-label">Availability</div>
+    <div class="card" style="padding:14px;margin-bottom:20px;display:flex;justify-content:space-between;">
+      <div style="text-align:center;"><div style="font-size:20px;font-weight:800;color:#6c5ce7;">Jul</div><div style="font-size:11px;color:#888;">Open</div></div>
+      <div style="text-align:center;"><div style="font-size:20px;font-weight:800;color:#fff;">Aug</div><div style="font-size:11px;color:#888;">Waitlist</div></div>
+      <div style="text-align:center;"><div style="font-size:20px;font-weight:800;color:#fff;">Sep</div><div style="font-size:11px;color:#888;">Partial</div></div>
+    </div>
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book with Mara</button>
+  </div>
+</div>
+
+<!-- ======================== ARTIST: LEON ======================== -->
+<div class="screen" id="screen-artist-leon">
+  <div class="staff-detail-header">
+    <button class="back-btn" onclick="showScreen('screen-staff')">← Back to Artists</button>
+    <div class="big-avatar" style="background:#1a1520;">🐉</div>
+    <div class="staff-name" style="font-size:22px;">Leon Voss</div>
+    <div class="staff-role">Neo-Traditional & Dark Art</div>
+    <div class="star-row">
+      <span class="stars">★★★★★</span>
+      <span style="font-size:13px;color:#888;">4.9 · 118 reviews</span>
+    </div>
+  </div>
+  <div style="padding:20px;">
+    <div class="section-label">About</div>
+    <div style="font-size:14px;color:#aaa;line-height:1.7;margin-bottom:20px;">
+      Leon brings mythology and darkness to life through vivid neo-traditional tattoos. His bold use of color and sharp linework has earned him international recognition and a dedicated following of collectors. Guest spots across Europe and Japan.
+    </div>
+    <div class="section-label">Specialties</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+      <span class="chip">Neo-Traditional</span><span class="chip">Dark Art</span><span class="chip">Color Realism</span><span class="chip">Illustrative</span>
+    </div>
+    <div class="section-label">Session Rate</div>
+    <div class="card" style="padding:14px;margin-bottom:20px;">
+      <div style="font-size:24px;font-weight:900;color:#6c5ce7;">$200/hr</div>
+      <div style="font-size:12px;color:#888;margin-top:4px;">4hr minimum for large pieces</div>
+    </div>
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book with Leon</button>
+  </div>
+</div>
+
+<!-- ======================== ARTIST: SUKI ======================== -->
+<div class="screen" id="screen-artist-suki">
+  <div class="staff-detail-header">
+    <button class="back-btn" onclick="showScreen('screen-staff')">← Back to Artists</button>
+    <div class="big-avatar" style="background:#1a1520;">🌸</div>
+    <div class="staff-name" style="font-size:22px;">Suki Park</div>
+    <div class="staff-role">Japanese & Geometric</div>
+    <div class="star-row">
+      <span class="stars">★★★★★</span>
+      <span style="font-size:13px;color:#888;">5.0 · 62 reviews</span>
+    </div>
+  </div>
+  <div style="padding:20px;">
+    <div class="section-label">About</div>
+    <div style="font-size:14px;color:#aaa;line-height:1.7;margin-bottom:20px;">
+      Suki's mastery of traditional Japanese Irezumi and sacred geometry creates tattoos of unmatched visual complexity and spiritual depth. Each piece is custom designed for the client's body and story.
+    </div>
+    <div class="section-label">Specialties</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+      <span class="chip">Irezumi</span><span class="chip">Mandala</span><span class="chip">Sacred Geometry</span><span class="chip">Black & Grey</span>
+    </div>
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book with Suki</button>
+  </div>
+</div>
+
+<!-- ======================== ARTIST: RIO ======================== -->
+<div class="screen" id="screen-artist-rio">
+  <div class="staff-detail-header">
+    <button class="back-btn" onclick="showScreen('screen-staff')">← Back to Artists</button>
+    <div class="big-avatar" style="background:#1a1325;">⚡</div>
+    <div class="staff-name" style="font-size:22px;">Rio Santos</div>
+    <div class="staff-role">Blackwork & Dotwork</div>
+    <div class="star-row">
+      <span class="stars">★★★★☆</span>
+      <span style="font-size:13px;color:#888;">4.8 · 38 reviews</span>
+    </div>
+  </div>
+  <div style="padding:20px;">
+    <div class="section-label">About</div>
+    <div style="font-size:14px;color:#aaa;line-height:1.7;margin-bottom:20px;">
+      Rio pushes the boundaries of negative space and precision dotwork to create tattoos that are at once stark and deeply intricate. Specializing in abstract blackwork and tribal-inspired designs.
+    </div>
+    <div class="section-label">Specialties</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+      <span class="chip">Blackwork</span><span class="chip">Dotwork</span><span class="chip">Tribal</span><span class="chip">Abstract</span>
+    </div>
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book with Rio</button>
+  </div>
+</div>
+
+<!-- ======================== BOOKING ======================== -->
+<div class="screen" id="screen-book">
+  <div class="sub-header">
+    <div class="screen-title">Book Appointment</div>
+    <div class="screen-subtitle">Reserve your session at Juniper Ink</div>
+  </div>
+  <div class="booking-step">
+    <div class="step-indicator">
+      <div class="step-dot done">1</div>
+      <div class="step-line done"></div>
+      <div class="step-dot active">2</div>
+      <div class="step-line"></div>
+      <div class="step-dot inactive">3</div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">SELECT ARTIST</div>
+      <div class="select-row">
+        <div class="sel-chip selected">🦋 Mara Cole</div>
+        <div class="sel-chip">🐉 Leon Voss</div>
+        <div class="sel-chip">🌸 Suki Park</div>
+        <div class="sel-chip">⚡ Rio Santos</div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">SERVICE TYPE</div>
+      <div class="select-row">
+        <div class="sel-chip selected">Custom Tattoo</div>
+        <div class="sel-chip">Touch-Up</div>
+        <div class="sel-chip">Cover-Up</div>
+        <div class="sel-chip">Consultation</div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">CHOOSE A DATE — JULY 2025</div>
+      <div class="date-grid">
+        <div class="date-cell unavail"><span class="dc-day">S</span><span class="dc-num">6</span></div>
+        <div class="date-cell unavail"><span class="dc-day">M</span><span class="dc-num">7</span></div>
+        <div class="date-cell"><span class="dc-day">T</span><span class="dc-num">8</span></div>
+        <div class="date-cell"><span class="dc-day">W</span><span class="dc-num">9</span></div>
+        <div class="date-cell"><span class="dc-day">T</span><span class="dc-num">10</span></div>
+        <div class="date-cell"><span class="dc-day">F</span><span class="dc-num">11</span></div>
+        <div class="date-cell unavail"><span class="dc-day">S</span><span class="dc-num">12</span></div>
+        <div class="date-cell unavail"><span class="dc-day">S</span><span class="dc-num">13</span></div>
+        <div class="date-cell"><span class="dc-day">M</span><span class="dc-num">14</span></div>
+        <div class="date-cell"><span class="dc-day">T</span><span class="dc-num">15</span></div>
+        <div class="date-cell"><span class="dc-day">W</span><span class="dc-num">16</span></div>
+        <div class="date-cell selected"><span class="dc-day">T</span><span class="dc-num">17</span></div>
+        <div class="date-cell"><span class="dc-day">F</span><span class="dc-num">18</span></div>
+        <div class="date-cell unavail"><span class="dc-day">S</span><span class="dc-num">19</span></div>
+        <div class="date-cell unavail"><span class="dc-day">S</span><span class="dc-num">20</span></div>
+        <div class="date-cell"><span class="dc-day">M</span><span class="dc-num">21</span></div>
+        <div class="date-cell"><span class="dc-day">T</span><span class="dc-num">22</span></div>
+        <div class="date-cell"><span class="dc-day">W</span><span class="dc-num">23</span></div>
+        <div class="date-cell"><span class="dc-day">T</span><span class="dc-num">24</span></div>
+        <div class="date-cell"><span class="dc-day">F</span><span class="dc-num">25</span></div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">AVAILABLE TIMES — JULY 17</div>
+      <div class="time-grid">
+        <div class="time-chip booked">9:00 AM</div>
+        <div class="time-chip booked">10:00 AM</div>
+        <div class="time-chip">11:00 AM</div>
+        <div class="time-chip selected">2:00 PM</div>
+        <div class="time-chip">3:00 PM</div>
+        <div class="time-chip booked">4:00 PM</div>
+      </div>
+    </div>
+
+    <div class="confirm-card">
+      <div class="confirm-row"><span class="confirm-key">Artist</span><span class="confirm-val">Mara Cole</span></div>
+      <div class="confirm-row"><span class="confirm-key">Service</span><span class="confirm-val">Custom Tattoo</span></div>
+      <div class="confirm-row"><span class="confirm-key">Date</span><span class="confirm-val">Thu July 17, 2025</span></div>
+      <div class="confirm-row"><span class="confirm-key">Time</span><span class="confirm-val">2:00 PM</span></div>
+      <div class="confirm-row"><span class="confirm-key">Deposit</span><span class="confirm-val">$75 due now</span></div>
+    </div>
+
+    <button class="btn-primary" onclick="showScreen('screen-booked')">Confirm & Pay Deposit →</button>
+  </div>
+</div>
+
+<!-- ======================== BOOKED CONFIRMATION ======================== -->
+<div class="screen" id="screen-booked">
+  <div class="success-screen">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">You're Booked!</div>
+    <div class="success-sub">Your appointment with <strong style="color:#fff;">Mara Cole</strong> on <strong style="color:#fff;">Thursday, July 17</strong> at <strong style="color:#fff;">2:00 PM</strong> is confirmed.<br><br>A confirmation has been sent to your email. We'll remind you 48 hours before your session.</div>
+
+    <div style="margin-top:32px;background:#14141f;border:1px solid #1e1e30;border-radius:16px;padding:20px;text-align:left;">
+      <div class="confirm-row"><span class="confirm-key">Deposit Paid</span><span style="color:#4ade80;font-weight:700;font-size:13px;">✓ $75.00</span></div>
+      <div class="confirm-row"><span class="confirm-key">Balance Due</span><span class="confirm-val">Day of session</span></div>
+      <div class="confirm-row" style="border-bottom:none;"><span class="confirm-key">Booking Ref</span><span class="confirm-val">#JI-2025-0717</span></div>
+    </div>
+
+    <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px;">
+      <button class="btn-primary" onclick="showScreen('screen-reminders')">Set Reminders</button>
+      <button class="btn-outline" onclick="showScreen('screen-home')">Back to Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== GALLERY ======================== -->
+<div class="screen" id="screen-gallery">
+  <div class="sub-header">
+    <div class="screen-title">Portfolio</div>
+    <div class="screen-subtitle">Artwork from our studio</div>
+  </div>
+  <div class="gallery-filter">
+    <div class="filter-chip active">All Work</div>
+    <div class="filter-chip">Fine Line</div>
+    <div class="filter-chip">Neo-Traditional</div>
+    <div class="filter-chip">Japanese</div>
+    <div class="filter-chip">Blackwork</div>
+    <div class="filter-chip">Color</div>
+  </div>
+  <div class="gallery-grid">
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#1a0a2e,#2d1060);">🦋</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#0a1a2e,#102850);">🐉</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#1a1535,#2a1545);">🌸</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#0e0e1a,#1a1535);">🌿</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#1a0a1a,#2a1030);">⚡</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#0a1a0a,#102010);">🌙</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#1a1010,#2a1515);">🔮</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#101a10,#152215);">🌊</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#1a1a0a,#252510);">🦅</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#1a0a10,#2a1018);">🌺</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#0a0a1a,#101028);">⚔️</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#1a1028,#201535);">🐺</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#0a1818,#102222);">🕊️</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#181018,#201520);">🌌</div>
+    <div class="gallery-cell" style="background:linear-gradient(135deg,#181800,#202200);">🦊</div>
+  </div>
+  <div style="padding:20px;margin-top:8px;">
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book a Custom Piece</button>
+  </div>
+</div>
+
+<!-- ======================== MORE (hub screen) ======================== -->
+<div class="screen" id="screen-more">
+  <div class="sub-header">
+    <div class="screen-title">More</div>
+    <div class="screen-subtitle">Everything Juniper Ink</div>
+  </div>
+  <div style="padding:20px;">
+    <div class="section-label">Features</div>
+    <div class="service-item" onclick="showScreen('screen-services')">
+      <div class="service-icon">🛠️</div>
+      <div class="service-info"><div class="service-name">Service Menu</div><div class="service-desc">Browse all tattoo services & pricing</div></div>
+      <span style="color:#555;font-size:18px;">›</span>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-reviews')">
+      <div class="service-icon">⭐</div>
+      <div class="service-info"><div class="service-name">Reviews & Ratings</div><div class="service-desc">4.9 stars from 312 clients</div></div>
+      <span style="color:#555;font-size:18px;">›</span>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-reminders')">
+      <div class="service-icon">🔔</div>
+      <div class="service-info"><div class="service-name">Reminders & Notifications</div><div class="service-desc">Manage your alerts</div></div>
+      <span style="color:#555;font-size:18px;">›</span>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-loyalty')">
+      <div class="service-icon">🎁</div>
+      <div class="service-info"><div class="service-name">Loyalty / Punch Card</div><div class="service-desc">Track your rewards</div></div>
+      <span style="color:#555;font-size:18px;">›</span>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-map')">
+      <div class="service-icon">📍</div>
+      <div class="service-info"><div class="service-name">Maps & Directions</div><div class="service-desc">Find Juniper Tattoo Company</div></div>
+      <span style="color:#555;font-size:18px;">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SERVICES ======================== -->
+<div class="screen" id="screen-services">
+  <div class="sub-header">
+    <button class="back-btn" style="margin-bottom:8px;" onclick="showScreen('screen-more')">← Back</button>
+    <div class="screen-title">Service Menu</div>
+    <div class="screen-subtitle">All styles & pricing</div>
+  </div>
+  <div style="padding:20px;">
+    <div class="section-label">Tattoo Services</div>
+    <div class="service-item" onclick="showScreen('screen-book')">
+      <div class="service-icon">✏️</div>
+      <div class="service-info">
+        <div class="service-name">Custom Design Tattoo</div>
+        <div class="service-desc">Fully original artwork, your vision brought to life</div>
+        <div class="service-meta"><span class="service-price">From $150</span><span class="service-time">2–6 hrs</span></div>
+      </div>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-book')">
+      <div class="service-icon">🎨</div>
+      <div class="service-info">
+        <div class="service-name">Color Portrait</div>
+        <div class="service-desc">Hyper-realistic color portrait work</div>
+        <div class="service-meta"><span class="service-price">From $300</span><span class="service-time">4–8 hrs</span></div>
+      </div>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-book')">
+      <div class="service-icon">🖋️</div>
+      <div class="service-info">
+        <div class="service-name">Fine Line / Micro</div>
+        <div class="service-desc">Delicate single-needle precision work</div>
+        <div class="service-meta"><span class="service-price">From $120</span><span class="service-time">1–3 hrs</span></div>
+      </div>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-book')">
+      <div class="service-icon">🔲</div>
+      <div class="service-info">
+        <div class="service-name">Blackwork & Dotwork</div>
+        <div class="service-desc">Bold geometric and abstract compositions</div>
+        <div class="service-meta"><span class="service-price">From $175</span><span class="service-time">2–5 hrs</span></div>
+      </div>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-book')">
+      <div class="service-icon">🔄</div>
+      <div class="service-info">
+        <div class="service-name">Cover-Up</div>
+        <div class="service-desc">Transform existing tattoos into new art</div>
+        <div class="service-meta"><span class="service-price">From $200</span><span class="service-time">3–7 hrs</span></div>
+      </div>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-book')">
+      <div class="service-icon">✨</div>
+      <div class="service-info">
+        <div class="service-name">Touch-Up</div>
+        <div class="service-desc">Refresh and restore faded work</div>
+        <div class="service-meta"><span class="service-price">From $60</span><span class="service-time">30–90 min</span></div>
+      </div>
+    </div>
+    <div class="service-item" onclick="showScreen('screen-book')">
+      <div class="service-icon">💬</div>
+      <div class="service-info">
+        <div class="service-name">Free Consultation</div>
+        <div class="service-desc">Discuss your idea with an artist</div>
+        <div class="service-meta"><span class="service-price">Free</span><span class="service-time">30 min</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <div class="section-label">Aftercare Products</div>
+      <div class="card" style="padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <div style="font-size:26px;">🧴</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#fff;">Juniper Aftercare Balm</div><div style="font-size:12px;color:#888;">All-natural healing formula</div></div>
+        <div style="font-size:15px;font-weight:800;color:#6c5ce7;">$18</div>
+      </div>
+      <div class="card" style="padding:14px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:26px;">🛡️</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#fff;">Protective Film Wrap</div><div style="font-size:12px;color:#888;">Saniderm 2nd skin application</div></div>
+        <div style="font-size:15px;font-weight:800;color:#6c5ce7;">$12</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button class="btn-primary" onclick="showScreen('screen-book')">Book a Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== REVIEWS ======================== -->
+<div class="screen" id="screen-reviews">
+  <div class="sub-header">
+    <button class="back-btn" style="margin-bottom:8px;" onclick="showScreen('screen-more')">← Back</button>
+    <div class="screen-title">Reviews & Ratings</div>
+    <div class="screen-subtitle">What clients are saying</div>
+  </div>
+  <div class="review-summary">
+    <div class="big-rating">4.9</div>
+    <div class="big-stars">★★★★★</div>
+    <div class="rating-count">Based on 312 verified reviews</div>
+    <div style="margin-top:18px;">
+      <div class="rating-bar-row"><span class="rb-label">5</span><div class="rb-track"><div class="rb-fill" style="width:88%"></div></div><span class="rb-pct">88%</span></div>
+      <div class="rating-bar-row"><span class="rb-label">4</span><div class="rb-track"><div class="rb-fill" style="width:9%"></div></div><span class="rb-pct">9%</span></div>
+      <div class="rating-bar-row"><span class="rb-label">3</span><div class="rb-track"><div class="rb-fill" style="width:2%"></div></div><span class="rb-pct">2%</span></div>
+      <div class="rating-bar-row"><span class="rb-label">2</span><div class="rb-track"><div class="rb-fill" style="width:1%"></div></div><span class="rb-pct">1%</span></div>
+      <div class="rating-bar-row"><span class="rb-label">1</span><div class="rb-track"><div class="rb-fill" style="width:0%"></div></div><span class="rb-pct">0%</span></div>
+    </div>
+  </div>
+  <div style="padding:0 20px 20px;">
+    <div class="section-label" style="margin-bottom:14px;">Recent Reviews</div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="reviewer-avatar">😊</div>
+        <div><div class="reviewer-name">Chloe R.</div><div class="reviewer-date">July 8, 2025</div></div>
+        <div style="margin-left:auto;"><div class="review-stars">★★★★★</div></div>
+      </div>
+      <div class="review-text">"Mara is an absolute genius. My botanical sleeve is exactly what I dreamed of — every petal and leaf looks real. The studio was immaculate and the vibe was so welcoming. Already planning my next piece."</div>
+      <div class="review-style">Fine Line · Botanical Sleeve</div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="reviewer-avatar">🤩</div>
+        <div><div class="reviewer-name">Marcus T.</div><div class="reviewer-date">June 29, 2025</div></div>
+        <div style="margin-left:auto;"><div class="review-stars">★★★★★</div></div>
+      </div>
+      <div class="review-text">"Leon transformed a terrible old tattoo into a stunning neo-traditional dragon. I was nervous about the cover-up but he walked me through every step. The result is jaw-dropping — I get compliments everywhere I go."</div>
+      <div class="review-style">Cover-Up · Neo-Traditional</div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="reviewer-avatar">🌟</div>
+        <div><div class="reviewer-name">Priya M.</div><div class="reviewer-date">June 15, 2025</div></div>
+        <div style="margin-left:auto;"><div class="review-stars">★★★★★</div></div>
+      </div>
+      <div class="review-text">"Suki's geometric mandala on my back is a masterpiece. The symmetry is perfect and she was so patient with design revisions. The aftercare instructions were thorough and healing went smoothly."</div>
+      <div class="review-style">Geometric Mandala · Back Piece</div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="reviewer-avatar">😎</div>
+        <div><div class="reviewer-name">James K.</div><div class="reviewer-date">June 1, 2025</div></div>
+        <div style="margin-left:auto;"><div class="review-stars">★★★★☆</div></div>
+      </div>
+      <div class="review-text">"Rio's dotwork is unreal. The detail is insane and the shading through dots alone is something else. Studio booking process via the app was super easy too. Will definitely be back."</div>
+      <div class="review-style">Dotwork · Forearm</div>
+    </div>
+
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book Your Session</button>
+  </div>
+</div>
+
+<!-- ======================== REMINDERS ======================== -->
+<div class="screen" id="screen-reminders">
+  <div class="sub-header">
+    <button class="back-btn" style="margin-bottom:8px;" onclick="showScreen('screen-more')">← Back</button>
+    <div class="screen-title">Reminders</div>
+    <div class="screen-subtitle">Stay on top of your appointments</div>
+  </div>
+  <div style="padding:20px;">
+    <div class="section-label">Upcoming Alerts</div>
+
+    <div class="reminder-card">
+      <div class="reminder-icon">📅</div>
+      <div>
+        <div class="reminder-title">Appointment Reminder</div>
+        <div class="reminder-sub">Mara Cole — Custom Tattoo<br>Thursday, July 17 at 2:00 PM</div>
+        <span class="reminder-badge badge-green">Confirmed ✓</span>
+      </div>
+    </div>
+
+    <div class="reminder-card">
+      <div class="reminder-icon">🧴</div>
+      <div>
+        <div class="reminder-title">Aftercare Check-In</div>
+        <div class="reminder-sub">Day 3 healing reminder will be sent after your session. Keep it moisturized!</div>
+        <span class="reminder-badge badge-yellow">Upcoming</span>
+      </div>
+    </div>
+
+    <div class="reminder-card">
+      <div class="reminder-icon">🎁</div>
+      <div>
+        <div class="reminder-title">Loyalty Reward Unlocked</div>
+        <div class="reminder-sub">You're 3 punches away from a free touch-up. Book again to get closer!</div>
+        <span class="reminder-badge badge-purple">3 Away</span>
+      </div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <div class="section-label">Notification Settings</div>
+      <div class="card" style="padding:16px;">
+        <div class="toggle-row">
+          <div><div class="toggle-label">48hr Appointment Reminder</div><div class="toggle-sub">Get notified 2 days before</div></div>
+          <div class="toggle"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Day-Of Reminder</div><div class="toggle-sub">Morning of your appointment</div></div>
+          <div class="toggle"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Aftercare Tips</div><div class="toggle-sub">Daily healing reminders</div></div>
+          <div class="toggle"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Promotions & Offers</div><div class="toggle-sub">Special deals from the studio</div></div>
+          <div class="toggle off"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Loyalty Updates</div><div class="toggle-sub">Points & reward alerts</div></div>
+          <div class="toggle"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button class="btn-primary" onclick="showScreen('screen-home')">All Set — Back to Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== LOYALTY ======================== -->
+<div class="screen" id="screen-loyalty">
+  <div class="sub-header">
+    <button class="back-btn" style="margin-bottom:8px;" onclick="showScreen('screen-more')">← Back</button>
+    <div class="screen-title">Loyalty Card</div>
+    <div class="screen-subtitle">Earn rewards with every session</div>
+  </div>
+
+  <div class="loyalty-card">
+    <div class="loyalty-name">Juniper Ink Rewards</div>
+    <div class="loyalty-holder">Alex Martinez</div>
+    <div class="loyalty-tier">⭑ Silver Member</div>
+    <div class="punch-grid">
+      <div class="punch stamped"></div>
+      <div class="punch stamped"></div>
+      <div class="punch stamped"></div>
+      <div class="punch stamped"></div>
+      <div class="punch stamped"></div>
+      <div class="punch stamped"></div>
+      <div class="punch stamped"></div>
+      <div class="punch"></div>
+      <div class="punch"></div>
+      <div class="punch"></div>
+    </div>
+    <div style="font-size:12px;color:#9a8fd4;text-align:center;margin-top:-4px;margin-bottom:16px;">7 of 10 — 3 more sessions for a free touch-up</div>
+    <div class="loyalty-points">
+      <div class="lp-item"><div class="lp-val">7</div><div class="lp-key">Sessions</div></div>
+      <div class="lp-item"><div class="lp-val">420</div><div class="lp-key">Points</div></div>
+      <div class="lp-item"><div class="lp-val">$75</div><div class="lp-key">Saved</div></div>
+    </div>
+  </div>
+
+  <div style="padding:0 20px 20px;">
+    <div class="section-label">Available Rewards</div>
+    <div class="reward-item">
+      <div class="reward-icon">✨</div>
+      <div class="reward-info">
+        <div class="reward-name">Free Touch-Up Session</div>
+        <div class="reward-req">Complete 10 sessions · 3 remaining</div>
+      </div>
+      <div class="reward-unlock" style="color:#666;">🔒</div>
+    </div>
+    <div class="reward-item">
+      <div class="reward-icon">🧴</div>
+      <div class="reward-info">
+        <div class="reward-name">Free Aftercare Kit</div>
+        <div class="reward-req">250 points required</div>
+      </div>
+      <div class="reward-unlock" style="color:#4ade80;">✓ Ready</div>
+    </div>
+    <div class="reward-item">
+      <div class="reward-icon">🎨</div>
+      <div class="reward-info">
+        <div class="reward-name">15% Off Large Piece</div>
+        <div class="reward-req">400 points required</div>
+      </div>
+      <div class="reward-unlock" style="color:#4ade80;">✓ Ready</div>
+    </div>
+    <div class="reward-item">
+      <div class="reward-icon">👑</div>
+      <div class="reward-info">
+        <div class="reward-name">Gold Member Status</div>
+        <div class="reward-req">Complete 15 total sessions</div>
+      </div>
+      <div class="reward-unlock" style="color:#666;">🔒</div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <button class="btn-primary" onclick="showScreen('screen-book')">Book Next Session →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== MAP ======================== -->
+<div class="screen" id="screen-map">
+  <div class="sub-header">
+    <button class="back-btn" style="margin-bottom:8px;" onclick="showScreen('screen-more')">← Back</button>
+    <div class="screen-title">Find Us</div>
+    <div class="screen-subtitle">Juniper Tattoo Company</div>
+  </div>
+
+  <div class="map-placeholder">
+    <div class="map-grid"></div>
+    <div class="map-pulse"></div>
+    <div class="map-pin">📍</div>
+  </div>
+
+  <div style="padding:20px;">
+    <div class="info-row">
+      <div class="info-icon">🏠</div>
+      <div>
+        <div class="info-label">Address</div>
+        <div class="info-val">482 Willow Street, Studio 3<br>Portland, OR 97209</div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">🕐</div>
+      <div>
+        <div class="info-label">Hours</div>
+        <div class="info-val">Mon–Fri: 11:00 AM – 7:00 PM<br>Sat: 10:00 AM – 6:00 PM<br>Sun: By appointment only</div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">📞</div>
+      <div>
+        <div class="info-label">Phone</div>
+        <div class="info-val">(503) 555-0142</div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">🚗</div>
+      <div>
+        <div class="info-label">Parking</div>
+        <div class="info-val">Free street parking on Willow St. & Oak Ave. MAX light rail stop 2 blocks east.</div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">🌐</div>
+      <div>
+        <div class="info-label">Website</div>
+        <div class="info-val">www.juniperinktattoo.com</div>
+      </div>
+    </div>
+    <div style="margin-top:16px; display:flex; gap:12px;">
+      <button class="btn-primary" style="flex:1;" onclick="showScreen('screen-book')">Book Appointment</button>
+      <button class="btn-outline" style="flex:1;">Get Directions</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showScreen(id){
+  var s=document.querySelectorAll('.screen');
+  for(var i=0;i<s.length;i++){s[i].classList.remove('active');}
+  var el=document.getElementById(id);
+  if(el){el.classList.add('active');}
+  var t=document.querySelectorAll('.tab');
+  for(var j=0;j<t.length;j++){t[j].classList.remove('tabon');}
+  var bt=document.getElementById('tab-'+id.replace('screen-',''));
+  if(bt){bt.classList.add('tabon');}
+  window.scrollTo(0,0);
+}
+
+// Toggle interaction
+document.querySelectorAll('.toggle').forEach(function(tog){
+  tog.addEventListener('click', function(){
+    this.classList.toggle('off');
+  });
+});
+
+// Sel chip interaction
+document.querySelectorAll('.sel-chip').forEach(function(chip){
+  chip.addEventListener('click', function(){
+    var siblings = this.parentElement.querySelectorAll('.sel-chip');
+    siblings.forEach(function(s){ s.classList.remove('selected'); });
+    this.classList.add('selected');
+  });
+});
+
+// Filter chip interaction
+document.querySelectorAll('.filter-chip').forEach(function(chip){
+  chip.addEventListener('click', function(){
+    var siblings = this.parentElement.querySelectorAll('.filter-chip');
+    siblings.forEach(function(s){ s.classList.remove('active'); });
+    this.classList.add('active');
+  });
+});
+
+// Date cell interaction
+document.querySelectorAll('.date-cell:not(.unavail)').forEach(function(cell){
+  cell.addEventListener('click', function(){
+    var siblings = this.parentElement.querySelectorAll('.date-cell');
+    siblings.forEach(function(s){ s.classList.remove('selected'); });
+    this.classList.add('selected');
+  });
+});
+
+// Time chip interaction
+document.querySelectorAll('.time-chip:not(.booked)').forEach(function(chip){
+  chip.addEventListener('click', function(){
+    var siblings = this.parentElement.querySelectorAll('.time-chip');
+    siblings.forEach(function(s){ s.classList.remove('selected'); });
+    this.classList.add('selected');
+  });
+});
+</script>
+<style>.screen{display:none!important}.screen.active{display:block!important}.tab.tabon{opacity:1!important;filter:brightness(1.4)}</style>
+<script>
+(function(){
+  function showScreen(id){
+    if(id && id.indexOf('screen-')!==0){id='screen-'+id;}
+    var s=document.querySelectorAll('.screen');
+    for(var i=0;i<s.length;i++){s[i].classList.remove('active');}
+    var el=document.getElementById(id)||document.querySelector('.screen[data-screen="'+id.replace('screen-','')+'"]');
+    if(el){el.classList.add('active');}
+    var t=document.querySelectorAll('.tab');
+    for(var j=0;j<t.length;j++){t[j].classList.remove('tabon');}
+    var bt=document.getElementById('tab-'+id.replace('screen-',''));
+    if(bt){bt.classList.add('tabon');}
+    window.scrollTo(0,0);
+  }
+  window.showScreen=showScreen;
+  document.addEventListener('DOMContentLoaded',function(){
+    // Make sure at least one screen is visible on load.
+    var screens=document.querySelectorAll('.screen');
+    if(screens.length){
+      var anyActive=document.querySelector('.screen.active');
+      if(!anyActive){screens[0].classList.add('active');}
+    }
+    // Backup: wire any element that references showScreen via data-nav too.
+    var navs=document.querySelectorAll('[data-nav]');
+    for(var k=0;k<navs.length;k++){
+      (function(n){n.addEventListener('click',function(){showScreen(n.getAttribute('data-nav'));});})(navs[k]);
+    }
+  });
+})();
+</script></body>
+</html>
